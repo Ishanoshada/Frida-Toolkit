@@ -1,0 +1,14 @@
+﻿Java.perform(
+function() {
+var javaRandom = Java.use("java.util.Random");
+console.log("[!] Found random loaded");
+javaRandom.nextInt.overload("int").implementation = function(a) {
+var ret = this.nextInt(a);
+console.log("[*] The random number: " + ret.toString());
+Java.perform(function() {
+console.log("[*] Calling method:" + Java.use("android.util.Log").getStackTraceString(Java.use("java.lang.Exception").$new()))
+});
+return ret;
+}
+}
+);

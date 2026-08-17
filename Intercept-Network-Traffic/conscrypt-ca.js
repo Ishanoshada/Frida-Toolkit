@@ -1,0 +1,12 @@
+﻿Java.perform(() => {
+const Log = Java.use('android.util.Log')
+const Exception = Java.use('java.lang.Exception')
+Java.use(
+'com.android.org.conscrypt.ConscryptEngineSocket$2'
+).checkServerTrusted.overloads.forEach((overload) => {
+overload.implementation = function (...args) {
+console.log(...args)
+}
+})
+})
+console.log(`ready to go`)

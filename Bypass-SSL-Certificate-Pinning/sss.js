@@ -1,0 +1,23 @@
+﻿/*  Android ssl certificate pinning bypass script for various methods
+by Maurizio Siddu
+Run with:
+frida -U -f [APP_ID] -l frida_multiple_unpinning.js --no-pause
+*/
+setTimeout(function() {
+Java.perform(function() {
+console.log('');
+console.log('======');
+console.log('[#] Android Bypass for various Certificate Pinning methods [#]');
+console.log('======');
+try {
+var array_list = Java.use("java.util.ArrayList");
+var TrustManagerImpl_Activity_1 = Java.use('com.android.org.conscrypt.TrustManagerImpl');
+TrustManagerImpl_Activity_1.checkTrustedRecursive.implementation = function(certs, ocspData, tlsSctData, host, clientAuth, untrustedChain, trustAnchorChain, used) {
+console.log('[+] Bypassing TrustManagerImpl (Android > 7) checkTrustedRecursive check: ' + host);
+return array_list.$new();
+};
+} catch (err) {
+console.log('[-] TrustManagerImpl (Android > 7) checkTrustedRecursive check not found');
+}
+});
+}, 0);

@@ -1,0 +1,47 @@
+﻿Java.perform(function() {
+/**
+SimVideo{
+playAddr=SimVideoUrlModel{
+sourceId=7392471712748571919,
+uri=v0300fg10000cqblbdfog65v2friif00,
+duration=176380.0,
+createTime=93831418,
+codecType=1,
+urlList.lastUrl=https:                bitRate=[
+{
+bitRate=102554,
+gearName='ame_gear_cold_r3_adapt_lower_540_2',
+qualityType=21,
+codecType=2,
+hdrType='0',
+bitrateFormat='mp4',
+playAddr={
+urlKey='v0300fg10000cqblbdfog65v2friif00_bytevc2_540p_102554',
+urlList.size=4
+}
+}, {
+bitRate=94661,
+gearName='ame_gear_cold_r3_adapt_lowest_540_2',
+qualityType=29,
+codecType=2,
+hdrType='0',
+bitrateFormat='mp4',
+playAddr={
+urlKey='v0300fg10000cqblbdfog65v2friif00_bytevc2_540p_94661',
+urlList.size=4
+}
+}]},
+height=576,
+width=1024,
+ratio='540p,
+videoLength=176380,
+needSetCookie=false
+}
+**/
+var simVideo = Java.use('com.ss.android.ugc.playerkit.simapicommon.model.SimVideo');
+simVideo.toString.implementation = function() {
+var str = this.toString();
+console.log(str);
+return str;
+}
+});
