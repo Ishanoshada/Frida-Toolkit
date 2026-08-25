@@ -11,6 +11,7 @@ A comprehensive, well-organized collection of **637+ Frida scripts** for mobile 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
 - [Category Directory](#category-directory)
+- [Native Anti-Tamper Library (cpp/)](#-native-anti-tamper-library-defensive-code--matching-bypasses)
 - [Statistics](#statistics)
 - [Installation & Setup](#installation--setup)
 - [Usage Guide](#usage-guide)
@@ -141,6 +142,36 @@ Click any category to view detailed README with script listings and usage exampl
 | **[WebView-Manipulation](./WebView-Manipulation/README.md)** | 3 | WebView and JavaScript interface manipulation | [GitHub](https://github.com/ishanoshada/Frida-Toolkit/tree/main/WebView-Manipulation) |
 | **[Testing-Templates](./Testing-Templates/README.md)** | 8 | CTF solutions (FridaLab, Uncrackable) and reference code | [GitHub](https://github.com/ishanoshada/Frida-Toolkit/tree/main/Testing-Templates) |
 
+### 🛡️ Native Anti-Tamper Library (Defensive Code + Matching Bypasses)
+
+The **[`cpp/`](./cpp/README.md)** directory contains a **native C/C++ Device Trust library** (the *defensive* counterpart to the 637 Frida bypass scripts above) plus a matching set of **Frida bypass scripts** that defeat each individual detection module. This is a realistic, production-style "anti-Frida" library that uses raw syscalls, XOR-encoded strings, decoy functions, and a JNI bridge with caller-origin checks.
+
+| Native Detection File | What It Detects | Frida Bypass Script | Strategy |
+|---|---|---|---|
+| [`root_check.c`](./cpp/root_check.c) | su, Magisk, APatch, mountinfo, busybox, SELinux, system props | [`bypass_root_check.js`](./cpp/bypass_root_check.js) | Hook `openat` + `__system_property_get` + `strstr` |
+| [`frida_detect.c`](./cpp/frida_detect.c) | TracerPid, zymbiote, gadget symbols, gadget TCP | [`bypass_frida_detect.js`](./cpp/bypass_frida_detect.js) | Hook `dlsym` (hide symbols) + `fopen` (deny /proc) |
+| [`lsposed_check.c`](./cpp/lsposed_check.c) | lspd process, /data/adb/lspd, Shamiko, HMA, ZygiskNext | [`bypass_lsposed_check.js`](./cpp/bypass_lsposed_check.js) | Hook `openat` + `getdents64` |
+| [`maps_scan.c`](./cpp/maps_scan.c) | frida-agent, libzygisk, xposed, anonymous rwxp | [`bypass_maps_scan.js`](./cpp/bypass_maps_scan.js) | Hook `openat` + `fgets` (scrub needles) |
+| [`mount_check.c`](./cpp/mount_check.c) | conscrypt tmpfs, magisk tmpfs, /system rw | [`bypass_mount_check.js`](./cpp/bypass_mount_check.js) | Hook `openat` + `fgets` (drop Magisk lines) |
+| [`env_check.c`](./cpp/env_check.c) | LD_PRELOAD, ptrace(TRACEME) | [`bypass_env_check.js`](./cpp/bypass_env_check.js) | Hook `getenv` + `ptrace` |
+| [`fd_scan.c`](./cpp/fd_scan.c) | frida/jit-cache in /proc/self/fd symlinks | [`bypass_fd_scan.js`](./cpp/bypass_fd_scan.js) | Hook `openat` + `readlinkat` |
+| [`plt_check.c`](./cpp/plt_check.c) | SSL_write/read/open hooked to non-system libs | [`bypass_plt_check.js`](./cpp/bypass_plt_check.js) | Hook `dlsym` + `dladdr` (forge system fname) |
+| [`port_probe.c`](./cpp/port_probe.c) | Frida D-Bus on ports 27042, 27043, 4444, … | [`bypass_port_probe.js`](./cpp/bypass_port_probe.js) | Hook `connect` (ECONNREFUSED) + `recv` (scrub D-Bus) |
+| [`thread_scan.c`](./cpp/thread_scan.c) | gmain, gum-js-loop, pool-frida, gdbus threads | [`bypass_thread_scan.js`](./cpp/bypass_thread_scan.js) | Hook `openat` + `fgets` (rename thread comm) |
+| [`stack_check.c`](./cpp/stack_check.c) | Frida frames in current call stack | [`bypass_stack_check.js`](./cpp/bypass_stack_check.js) | Hook `dladdr` (forge libc path) |
+| [`timing.c`](./cpp/timing.c) | syscall loop 8× slower than baseline | [`bypass_timing.js`](./cpp/bypass_timing.js) | Hook `getpid` + `syscall` (instant return) |
+| [`adb_native.c`](./cpp/adb_native.c) | adbd running, adb_keys, TCP 5037 | [`bypass_adb_native.js`](./cpp/bypass_adb_native.js) | Hook `__system_property_get` + `openat` |
+| [`build_native.c`](./cpp/build_native.c) | vbmeta, verifiedbootstate, test-keys, eng/userdebug | [`bypass_build_native.js`](./cpp/bypass_build_native.js) | Hook `__system_property_get` (return clean) |
+| [`device_trust_native.cpp`](./cpp/device_trust_native.cpp) | RWX segments, frida modules, libc symbol, fd symlinks | [`bypass_device_trust_native.js`](./cpp/bypass_device_trust_native.js) | Hook `openat` + `fgets` + `readlinkat` + `dladdr` |
+| [`snitchtt_jni.c`](./cpp/snitchtt_jni.c) + [`guard_entry.c`](./cpp/guard_entry.c) + [`hunter_entry.c`](./cpp/hunter_entry.c) | Composed: sna_e()/snb_e(), late-inject diff, caller-origin, validation hashes | [`bypass_snitchtt_jni.js`](./cpp/bypass_snitchtt_jni.js) (master) | Replace sna_e/snb_e + hook `dladdr` + `strstr` |
+
+**Quick start (full bypass):**
+```bash
+frida -U -f com.target.app -l cpp/bypass_snitchtt_jni.js --no-pause
+```
+
+📖 See **[`cpp/README.md`](./cpp/README.md)** for the architecture diagram, full module reference, and per-script strategy details.
+
 ---
 
 ## 📊 Statistics
@@ -168,9 +199,11 @@ Click any category to view detailed README with script listings and usage exampl
 | 17 | WebView-Manipulation | 3 | WebView hooks | Android, iOS |
 | 18 | Linux-Native-Tools | 3 | System tools | Linux, Android |
 | | **TOTAL** | **637** | - | - |
+| 19 | **[cpp/](./cpp/README.md) (Native + bypasses)** | **16 bypasses** | Anti-tamper (root, Frida, LSPosed, ADB, build) | Android |
+| | **GRAND TOTAL** | **653** | - | - |
 
 ### Platform Coverage
-- **Android**: 550+ scripts
+- **Android**: 550+ scripts (+ 16 native bypasses)
 - **iOS**: 120+ scripts
 - **Cross-Platform**: 100+ scripts
 
