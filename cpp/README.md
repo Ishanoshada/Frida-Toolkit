@@ -2,6 +2,54 @@
 
 This directory contains a **native C/C++ anti-tamper / anti-Frida library** (the *defensive* counterpart to the 637 Frida bypass scripts in the parent project) along with a matching set of **Frida bypass scripts** that defeat each individual detection module.
 
+## 🎯 Master Unified Hooks (NEW)
+
+**[master-unified-hooks.js](./master-unified-hooks.js)** — A comprehensive aggregation of all individual bypass scripts into a single, modular, production-ready Frida instrumentation file.
+
+### Features:
+- **16 Android Detection Bypasses** (ADB, Frida, Root, Environment, Timing, Build properties, etc.)
+- **6 Android Java/Application Hooks** (Activities, SQLite, Intents, Location, Biometrics)
+- **4 Native-Level Hooks** (dlopen, Process execution, RegisterNatives, Syscall tracing)
+- **5 iOS Objective-C Hooks** (App info, Biometrics, Location, URL schemes, Preferences)
+- **Modular Configuration**: Enable/disable each module independently
+- **Platform Detection**: Automatically detects Android (Java) vs iOS (ObjC)
+- **Comprehensive Logging**: Verbose logging with DEBUG mode support
+- **RPC Exports**: Query/modify configuration at runtime
+
+### Quick Start:
+```bash
+# Run on Android
+frida -U -f com.example.app -l cpp/master-unified-hooks.js --no-pause
+
+# Run on iOS
+frida -U -f com.example.app -l cpp/master-unified-hooks.js --no-pause
+
+# Configure at runtime
+rpc.exports.setConfig({enableADBBypass: false, enableLocationHooks: true})
+rpc.exports.status()  # Get current status
+```
+
+### Architecture:
+```
+master-unified-hooks.js
+├── Android Detection Bypasses (AndroidBypassModule)
+│   ├── ADB, Frida, Root, Environment, Timing, Build properties
+│   └── ~500 lines of native-level Frida interceptors
+├── Android Java Hooks (AndroidJavaModule)
+│   ├── Activities, SQLite, Intents, Location, Biometrics
+│   └── ~400 lines of Java/Kotlin interception
+├── Native Hooks (NativeModule)
+│   ├── dlopen, Process execution, RegisterNatives, Syscalls
+│   └── ~200 lines of native instrumentation
+└── iOS Objective-C Hooks (IOSModule)
+    ├── App info, Biometrics, Location, URL schemes, Preferences
+    └── ~250 lines of ObjC hooking
+```
+
+**Total**: 1000+ lines of unified, production-ready instrumentation code combining functionality from **130+ individual bypass scripts** and **hook scripts** across this entire repository.
+
+---
+
 The native code models a realistic "Device Trust" library similar to those embedded in modern banking, payments, and DRM-protected Android apps. It detects:
 
 - **Root / Magisk / APatch** (binary, magisk daemon, mountinfo, busybox, SELinux)

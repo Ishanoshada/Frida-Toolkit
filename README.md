@@ -10,7 +10,9 @@ A comprehensive, well-organized collection of **637+ Frida scripts** for mobile 
 
 - [Overview](#overview)
 - [Quick Start](#quick-start)
-- [Category Directory](#category-directory)
+- [Master Unified Hooks File](#-master-unified-hooks-file-new)
+- [Ultimate Frida Bypass Script](#-ultimate-frida-bypass-script-v43)
+- [Category Directory](#-category-directory)
 - [Native Anti-Tamper Library (cpp/)](#-native-anti-tamper-library-defensive-code--matching-bypasses)
 - [Statistics](#statistics)
 - [Installation & Setup](#installation--setup)
@@ -26,6 +28,8 @@ A comprehensive, well-organized collection of **637+ Frida scripts** for mobile 
 
 This collection contains **637 Frida scripts** organized into **18 functional categories** for comprehensive mobile app security analysis. All scripts are cleaned, deduplicated, and organized by security bypass capability, hooking function, and platform (Android/iOS).
 
+> **NEW**: See [**cpp/master-unified-hooks.js**](cpp/master-unified-hooks.js) — A production-ready aggregation combining **130+ scripts** into a single modular Frida instrumentation file with platform detection, configurable modules, and RPC exports.
+
 ### What is Frida?
 
 [Frida](https://frida.re/) is a dynamic instrumentation toolkit that lets you inject snippets of JavaScript into black box processes. Perfect for:
@@ -39,10 +43,12 @@ This collection contains **637 Frida scripts** organized into **18 functional ca
 
 - ✅ **637+ scripts** covering major security bypass techniques
 - ✅ **18 organized categories** for easy navigation
+- ✅ **Master unified hook file** combining 130+ scripts (see cpp/master-unified-hooks.js)
 - ✅ **Deduplicated & cleaned** of author names/watermarks
 - ✅ **Detailed documentation** for each category
 - ✅ **Real usage examples** and workflows
 - ✅ **Platform coverage**: Android, iOS, and platform-agnostic
+- ✅ **Modular & configurable** — enable/disable hooks at runtime
 - ✅ **Active maintenance** and updates
 
 ---
@@ -90,7 +96,86 @@ cd Intercept-Crypto-Operations/
 
 ---
 
-## 📁 Category Directory
+## ⚡ Master Unified Hooks File (NEW)
+
+**[cpp/master-unified-hooks.js](cpp/master-unified-hooks.js)** \u2014 A single production-ready Frida instrumentation file combining **130+ scripts** into one modular, platform-aware hook suite.
+
+### One File, All Capabilities
+
+```bash
+# Single command for comprehensive instrumentation
+frida -U -f com.example.app -l cpp/master-unified-hooks.js --no-pause
+```
+
+### What's Included (1000+ lines)
+
+| Module | Coverage | Status |
+|--------|----------|--------|
+| **Android Detection Bypasses** | ADB, Frida, Root, Environment, Timing, Build properties, LSPosed, Mount/Maps/FD scanning | ✅ |
+| **Android Java Hooks** | Activities, SQLite, Intents, Location spoofing, Biometric bypass, Permissions | ✅ |
+| **Native Hooks** | dlopen monitoring, Process execution, RegisterNatives/JNI, Syscall tracing | ✅ |
+| **iOS Objective-C Hooks** | App info extraction, Biometric bypass, Location spoofing, URL schemes, NSUserDefaults | ✅ |
+
+### Modular Configuration
+
+Enable/disable modules at runtime:
+
+```javascript
+// Get current config
+const status = rpc.exports.status();
+
+// Update configuration
+rpc.exports.setConfig({
+    enableADBBypass: false,
+    enableLocationHooks: true,
+    enableFridaBypass: true
+});
+```
+
+---
+
+## � Ultimate Frida Bypass Script v4.3+
+
+**[Ultimate Frida Bypass](https://github.com/Ishanoshada/Ultimate-Frida-Bypass)** — A comprehensive, production-ready Frida script providing **19 layers of protection bypass** for enterprise-grade security frameworks.
+
+> **⚠️ IMPORTANT**: This script is for **educational and security research purposes only**. Use only on applications you own or have explicit permission to test.
+
+### Features & Capabilities
+
+Provides complete bypass for:
+- **Talsec** — Advanced app security framework
+- **freeRASP** — Mobile app protection platform
+- **FreeRASP KMP** — Kotlin Multiplatform variant
+- **Flutter Applications** — Flutter-based security protections
+- **Similar Android Security Frameworks** — Generic protection mechanisms
+
+### What's Included
+
+| Layer | Protection | Status |
+|-------|-----------|--------|
+| **1-3** | Root/Jailbreak detection, Environment checks, Build property spoofing | ✅ |
+| **4-6** | ADB detection, Debugger detection, Frida/gadget detection | ✅ |
+| **7-9** | Process integrity, Memory inspection, Timing analysis bypass | ✅ |
+| **10-12** | System call hooking, Library interception, JNI tampering detection | ✅ |
+| **13-15** | SELinux bypass, Stack inspection, Caller-origin verification | ✅ |
+| **16-19** | Thread analysis, Map scanning, File descriptor inspection, Late injection detection | ✅ |
+
+### Quick Usage
+
+```bash
+# Direct execution
+frida -U -f com.example.app -l https://github.com/Ishanoshada/Ultimate-Frida-Bypass/blob/main/main.js --no-pause
+
+# Or download and run locally
+wget https://raw.githubusercontent.com/Ishanoshada/Ultimate-Frida-Bypass/main/main.js
+frida -U -f com.example.app -l main.js --no-pause
+```
+
+**Repository**: [github.com/Ishanoshada/Ultimate-Frida-Bypass](https://github.com/Ishanoshada/Ultimate-Frida-Bypass)
+
+---
+
+## �📁 Category Directory
 
 Click any category to view detailed README with script listings and usage examples.
 
