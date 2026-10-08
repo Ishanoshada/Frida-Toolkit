@@ -115,7 +115,9 @@ static int resolve_lib_dir(const void *anchor, char *dir_out, size_t dir_sz) {
     const char *f = di.dli_fname;
     size_t n = strlen(f), sl = n;
     while (sl > 0 && f[sl - 1] != '/') sl--;
-    if (sl == 0 || sl >= dir_sz) return 0;
+    /* Require room for sl bytes plus the terminating NUL to avoid writing
+     * dir_out[sl] one byte past the end of the buffer when sl == dir_sz. */
+    if (sl == 0 || sl + 1 > dir_sz) return 0;
     memcpy(dir_out, f, sl);
     dir_out[sl] = '\0';
     return 1;
