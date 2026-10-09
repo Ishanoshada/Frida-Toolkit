@@ -148,13 +148,13 @@ Each `.c` / `.cpp` file in this directory has a matching `bypass_*.js` script th
 
 The CMake project builds `libsna.so`, `libsnb.so`, `libsnitchtt.so`, and
 `libdevice_trust_native.so` for the selected Android ABI. Install the Android
-NDK and CMake (the Android SDK's CMake package works), then set
-`ANDROID_NDK_HOME` to the installed NDK directory. For example, from the
+NDK, CMake, and Ninja (the Android SDK's CMake package includes Ninja), then
+set `ANDROID_NDK_HOME` to the installed NDK directory. For example, from the
 repository root in PowerShell:
 
 ```powershell
 $env:ANDROID_NDK_HOME = "C:\Users\you\AppData\Local\Android\Sdk\ndk\<version>"
-cmake -S .\cpp -B .\cpp\build `
+cmake -S .\cpp -B .\cpp\build -G Ninja `
   -DCMAKE_TOOLCHAIN_FILE="$env:ANDROID_NDK_HOME\build\cmake\android.toolchain.cmake" `
   -DANDROID_ABI=arm64-v8a `
   -DANDROID_PLATFORM=android-23
