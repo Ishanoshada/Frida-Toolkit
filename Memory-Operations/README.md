@@ -26,7 +26,7 @@ Understanding application memory is crucial for reverse engineering. These scrip
 ### Memory Dump
 ```bash
 # Extract application memory
-frida -U -f com.example.app -l memory-dumper.js --no-pause > memory.bin
+frida -U -f com.example.app -l path/to/custom-dumper.js --no-pause > memory.bin
 ```
 
 ### Heap Analysis
@@ -45,7 +45,7 @@ frida -U -f com.example.app -l memory-search.js --no-pause
 ```bash
 # Comprehensive memory inspection
 frida -U -f com.example.app \
-  -l memory-dumper.js \
+  -l path/to/custom-dumper.js \
   -l heap-analyzer.js \
   --no-pause
 ```
@@ -128,7 +128,7 @@ EOF
 
 ```bash
 # Step 1: Dump process memory
-frida -U -f com.example.app -l memory-dumper.js --no-pause > memory.bin
+frida -U -f com.example.app -l path/to/custom-dumper.js --no-pause > memory.bin
 
 # Step 2: Extract strings
 strings memory.bin > memory_strings.txt
@@ -155,7 +155,7 @@ grep -E "[0-9]{16}" memory_strings.txt  # Credit card patterns
 ### Integration with Frida
 ```bash
 # Combine Frida dumps with forensics tools
-frida -U -f com.example.app -l dumper.js > dump.bin
+frida -U -f com.example.app -l path/to/custom-dumper.js > dump.bin
 volatility -f dump.bin <analysis_plugin>
 ```
 

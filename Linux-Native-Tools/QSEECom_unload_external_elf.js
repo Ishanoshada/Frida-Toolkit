@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_unload_external_elf.
 *
@@ -32,4 +32,4 @@ log("QSEECom_unload_external_elf()");
 */
 onLeave: function (log, retval, state) {
 }
-}
+});

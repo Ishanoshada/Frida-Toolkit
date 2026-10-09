@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_send_cmd.
 *
@@ -46,4 +46,4 @@ console.log("Buffer saved in "+path);
 */
 onLeave: function (log, retval, state) {
 }
-}
+});

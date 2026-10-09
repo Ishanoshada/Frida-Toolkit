@@ -14,17 +14,15 @@ These scripts provide utilities for Linux-specific operations, system tool integ
 - **Process Monitoring**: Linux process and system analysis
 
 ## Scripts Included (3 total)
-- `python-cli-tool-boilerplate.js` - Python CLI tool template
+- `python-cli-tool-boilerplate.invalid.py.txt` - Preserved incomplete source; not runnable
 - QSECom utility scripts
 - Linux system analysis utilities
 
 ## Usage Examples
 
 ### Python CLI Tool Integration
-```bash
-# Hook Python CLI tools
-frida -U -f python-process -l python-cli-tool-boilerplate.js --no-pause
-```
+No runnable Python CLI template is currently provided; the incomplete sample
+is retained as text for reference.
 
 ### System Analysis
 ```bash
