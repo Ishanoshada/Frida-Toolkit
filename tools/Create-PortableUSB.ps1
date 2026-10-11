@@ -69,6 +69,7 @@ $scrcpyDir = Join-Path $toolsRoot "scrcpy"
 $jadxDir = Join-Path $toolsRoot "jadx"
 $pwshDir = Join-Path $toolsRoot "pwsh"
 $downloadsDir = Join-Path $env:TEMP "frida-toolkit-portable-downloads"
+$pythonBuildDir = Join-Path $downloadsDir "python-build"
 
 New-Item -ItemType Directory -Path $toolsRoot, $downloadsDir -Force | Out-Null
 
@@ -140,26 +141,42 @@ if (-not (Test-Path (Join-Path $jadxDir "bin\jadx.bat"))) {
 # ---------------------------------------------------------------------------
 Write-Step "Portable Python $PythonVersion + frida-tools + frida + pymobiledevice3"
 $pythonExe = Join-Path $pythonDir "python.exe"
-if (-not (Test-Path $pythonExe)) {
-    $zip = Join-Path $downloadsDir "python-embed.zip"
-    Invoke-WebRequest -Uri "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-embed-amd64.zip" -OutFile $zip
-    New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
-    Expand-Archive -Path $zip -DestinationPath $pythonDir -Force
-
-    # Embeddable Python ships with site-packages/pip disabled by default;
-    # uncomment the "import site" line in the ._pth file to enable them.
-    $pthFile = Get-ChildItem $pythonDir -Filter "python*._pth" | Select-Object -First 1
-    if ($pthFile) {
-        (Get-Content $pthFile.FullName) -replace '^#\s*import site$', 'import site' | Set-Content $pthFile.FullName
-    }
-
-    $getPip = Join-Path $downloadsDir "get-pip.py"
-    Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPip
-    & $pythonExe $getPip --no-warn-script-location
-} else {
-    Write-Host "Portable Python already present." -ForegroundColor Green
+$zip = Join-Path $downloadsDir "python-embed.zip"
+Invoke-WebRequest -Uri "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-embed-amd64.zip" -OutFile $zip
+if (Test-Path $pythonBuildDir) {
+    Remove-Item $pythonBuildDir -Recurse -Force
 }
-& $pythonExe -m pip install --upgrade --no-warn-script-location pip frida-tools frida pymobiledevice3 objection
+New-Item -ItemType Directory -Path $pythonBuildDir -Force | Out-Null
+Expand-Archive -Path $zip -DestinationPath $pythonBuildDir -Force
+
+# Embeddable Python ships with site-packages/pip disabled by default;
+# uncomment the "import site" line in the ._pth file to enable them.
+$pthFile = Get-ChildItem $pythonBuildDir -Filter "python*._pth" | Select-Object -First 1
+if ($pthFile) {
+    (Get-Content $pthFile.FullName) -replace '^#\s*import site$', 'import site' | Set-Content $pthFile.FullName
+}
+
+$getPip = Join-Path $downloadsDir "get-pip.py"
+Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPip
+$buildPythonExe = Join-Path $pythonBuildDir "python.exe"
+& $buildPythonExe $getPip --no-warn-script-location
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not bootstrap pip into the portable Python build."
+}
+& $buildPythonExe -m pip install --upgrade --no-warn-script-location pip setuptools wheel
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not install pip and Python build tools."
+}
+& $buildPythonExe -m pip install --no-build-isolation --upgrade --no-warn-script-location frida-tools frida pymobiledevice3 objection
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not install the portable Python packages."
+}
+
+if (Test-Path $pythonDir) {
+    Remove-Item $pythonDir -Recurse -Force
+}
+New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
+Copy-Item -Path (Join-Path $pythonBuildDir "*") -Destination $pythonDir -Recurse -Force
 
 Remove-Item $downloadsDir -Recurse -Force -ErrorAction SilentlyContinue
 
@@ -188,11 +205,29 @@ if (-not (Test-Path (Join-Path $pwshDir "pwsh.exe"))) {
 # 7. Portable launcher
 # ---------------------------------------------------------------------------
 Write-Step "Writing launcher"
+# pip's Scripts\*.exe entry points hardcode the interpreter path from build time,
+# so they break once the kit lives on a different drive letter. These shims call
+# the modules through the bundled python.exe relative to their own location.
+$shimDir = Join-Path $toolsRoot "shims"
+New-Item -ItemType Directory -Path $shimDir -Force | Out-Null
+$shims = @{
+    "frida"           = "frida_tools.repl"
+    "frida-ps"        = "frida_tools.ps"
+    "frida-trace"     = "frida_tools.tracer"
+    "frida-ls-devices" = "frida_tools.lsd"
+    "objection"       = "objection"
+    "pymobiledevice3" = "pymobiledevice3"
+}
+foreach ($name in $shims.Keys) {
+    $shimBody = "@echo off`r`n`"%~dp0..\python\python.exe`" -m $($shims[$name]) %*`r`n"
+    Set-Content -Path (Join-Path $shimDir "$name.cmd") -Value $shimBody -Encoding ASCII
+}
+
 $launcher = @'
 @echo off
 setlocal
 set "ROOT=%~dp0"
-set "PATH=%ROOT%PortableTools\python;%ROOT%PortableTools\python\Scripts;%ROOT%PortableTools\platform-tools;%ROOT%PortableTools\scrcpy;%ROOT%PortableTools\jadx\bin;%ROOT%PortableTools\pwsh;%PATH%"
+set "PATH=%ROOT%PortableTools\shims;%ROOT%PortableTools\python;%ROOT%PortableTools\platform-tools;%ROOT%PortableTools\scrcpy;%ROOT%PortableTools\jadx\bin;%ROOT%PortableTools\pwsh;%PATH%"
 cd /d "%ROOT%Frida-Toolkit"
 echo Frida-Toolkit portable environment ready: adb, scrcpy, jadx, frida, pymobiledevice3, objection
 if exist "%ROOT%PortableTools\pwsh\pwsh.exe" (

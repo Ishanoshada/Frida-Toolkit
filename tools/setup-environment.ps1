@@ -294,47 +294,49 @@ try {
 
 $installedDistros = @()
 if ($wslInstalled) {
-    $installedDistros = @((wsl -l -q 2>$null) | Where-Object { $_ -and $_.Trim() })
+    # wsl.exe emits UTF-16; strip the NUL bytes PowerShell leaves behind.
+    $installedDistros = @((wsl -l -q 2>$null) | ForEach-Object { ($_ -replace "`0", "").Trim() } | Where-Object { $_ })
 }
 
+# Name = WSL distro name (see `wsl --list --online`); Match = prefix used to
+# detect an already-installed copy (Fedora's name carries a version suffix).
 $linuxTargets = @(
     @{
         Name = "Ubuntu"
-        InstallCommand = "wsl --install -d Ubuntu --no-launch"
+        Match = "Ubuntu"
         Bootstrap = "apt-get update && apt-get install -y build-essential cmake ninja-build python3 python3-pip python3-venv git android-tools-adb android-tools-fastboot && pip3 install --break-system-packages --upgrade frida-tools frida"
-        PostInstall = "First time only: run 'wsl -d Ubuntu' once to finish creating your normal (non-root) Linux user account."
     },
     @{
-        Name = "Fedora"
-        InstallCommand = "wsl --install -d Fedora --no-launch"
-        Bootstrap = "dnf -y update && dnf -y groupinstall 'KDE Plasma Workspaces' && dnf -y install @development-tools cmake ninja-build python3 python3-pip git android-tools adb fastboot && pip3 install --break-system-packages --upgrade frida-tools frida"
-        PostInstall = "First time only: run 'wsl -d Fedora' once to finish creating your normal (non-root) Linux user account; if you want a full native Fedora KDE desktop, use a VM or dual-boot instead of WSL."
+        Name = "FedoraLinux-43"
+        Match = "FedoraLinux"
+        # KDE apps (Konsole/Kate/Dolphin) run on Windows 11 via WSLg; a full
+        # Plasma desktop session isn't practical inside WSL (use a VM or dual-boot).
+        Bootstrap = "dnf -y upgrade --refresh && dnf -y install gcc gcc-c++ make cmake ninja-build python3 python3-pip git android-tools konsole kate dolphin && pip3 install --break-system-packages --upgrade frida-tools frida"
     }
 )
 
 foreach ($target in $linuxTargets) {
-    if ($installedDistros -contains $target.Name) {
-        Write-Host "WSL2 + $($target.Name) already installed; bootstrapping the Linux-side toolchain..."
-        wsl --set-version $target.Name 2 2>$null
-        try {
-            wsl -d $target.Name -u root -- bash -c $target.Bootstrap
-            Write-Host "Linux toolchain ready inside WSL $($target.Name) (build-essential/cmake/ninja, adb/fastboot, frida)." -ForegroundColor Green
-            Write-Host $target.PostInstall -ForegroundColor Cyan
-        } catch {
-            Write-Host "Could not fully bootstrap WSL $($target.Name); re-run this script after the distro is fully initialized." -ForegroundColor Yellow
+    $existing = $installedDistros | Where-Object { $_ -like "$($target.Match)*" } | Select-Object -First 1
+    if ($existing) {
+        Write-Host "WSL distro '$existing' already installed; bootstrapping the Linux-side toolchain..."
+        wsl --set-version $existing 2 2>$null | Out-Null
+        wsl -d $existing -u root -- bash -c $target.Bootstrap
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Linux toolchain ready inside WSL $existing." -ForegroundColor Green
+            Write-Host "First time only: run 'wsl -d $existing' once to create your normal (non-root) Linux user." -ForegroundColor Cyan
+        } else {
+            Write-Host "Bootstrap of $existing did not finish cleanly (exit $LASTEXITCODE); re-run this script after the distro has been launched once." -ForegroundColor Yellow
         }
     } else {
-        Write-Host "Installing WSL2 + $($target.Name) (requires a reboot the first time)..."
-        try {
-            Invoke-Expression $target.InstallCommand 2>$null
-            Write-Host "WSL2/$($target.Name) install kicked off. Reboot, then re-run this script to finish the Linux toolchain bootstrap." -ForegroundColor Yellow
-        } catch {
-            Write-Host "WSL $($target.Name) install command was not available on this host; skipping that distro." -ForegroundColor Yellow
+        Write-Host "Installing WSL2 distro $($target.Name) (requires a reboot the first time)..."
+        wsl --install -d $target.Name --no-launch
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "$($target.Name) install kicked off. Reboot if prompted, then re-run this script to finish the Linux toolchain bootstrap." -ForegroundColor Yellow
+        } else {
+            Write-Host "Could not install $($target.Name) (check 'wsl --list --online' for current names); skipping." -ForegroundColor Yellow
         }
     }
 }
-
-Write-Host "WSL summary: Ubuntu and Fedora are both supported; install each distro once and re-run this script to bootstrap the Linux tools." -ForegroundColor Cyan
 
 # ---------------------------------------------------------------------------
 # 10. Laptop performance tweaks (low-GPU, modest-RAM laptops)
