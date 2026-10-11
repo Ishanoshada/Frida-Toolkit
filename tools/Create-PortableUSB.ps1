@@ -52,6 +52,7 @@ function Write-Step($text) {
 # Normalize so "D:", "D:\", and "D:/" all work identically - a bare drive
 # letter with no backslash is a common, confusing source of "not found"
 # errors since it resolves relative to that drive's current directory.
+$UsbDrive = $UsbDrive.Trim().Trim('"')
 if ($UsbDrive -match '^[A-Za-z]:$') { $UsbDrive = "$UsbDrive\" }
 
 if (-not (Test-Path $UsbDrive)) {

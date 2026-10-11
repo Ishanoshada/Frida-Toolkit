@@ -31,7 +31,7 @@ echo.
 echo Building the portable Frida-Toolkit kit on %CHOSEN%:\ ...
 echo (This downloads several tools and can take a few minutes - please wait.)
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Create-PortableUSB.ps1" -UsbDrive "%CHOSEN%:\"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Create-PortableUSB.ps1" -UsbDrive "%CHOSEN%:"
 
 echo.
 echo Done. Press any key to close this window.
