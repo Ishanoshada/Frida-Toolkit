@@ -69,7 +69,7 @@ $platformToolsDir = Join-Path $toolsRoot "platform-tools"
 $scrcpyDir = Join-Path $toolsRoot "scrcpy"
 $jadxDir = Join-Path $toolsRoot "jadx"
 $pwshDir = Join-Path $toolsRoot "pwsh"
-$downloadsDir = Join-Path $env:TEMP "frida-toolkit-portable-downloads"
+$downloadsDir = Join-Path $env:TEMP "frida-toolkit-portable-downloads-$PID"
 $pythonBuildDir = Join-Path $downloadsDir "python-build"
 
 New-Item -ItemType Directory -Path $toolsRoot, $downloadsDir -Force | Out-Null
@@ -79,6 +79,9 @@ New-Item -ItemType Directory -Path $toolsRoot, $downloadsDir -Force | Out-Null
 # ---------------------------------------------------------------------------
 Write-Step "Copying Frida-Toolkit repo to $portableRoot\Frida-Toolkit"
 robocopy $repoRoot (Join-Path $portableRoot "Frida-Toolkit") /MIR /XD ".git" "build" /NFL /NDL /NJH /NJS | Out-Null
+if ($LASTEXITCODE -ge 8) {
+    throw "Could not copy the Frida-Toolkit repository to the USB drive (robocopy exit code $LASTEXITCODE)."
+}
 
 # ---------------------------------------------------------------------------
 # 2. Android platform-tools (adb/fastboot) - already a portable zip
@@ -172,12 +175,20 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) {
     throw "Could not install the portable Python packages."
 }
-
-if (Test-Path $pythonDir) {
-    Remove-Item $pythonDir -Recurse -Force
+& $buildPythonExe -m pip check
+if ($LASTEXITCODE -ne 0) {
+    throw "The portable Python package dependencies are inconsistent."
 }
+& $buildPythonExe -c "import frida, frida_tools, pymobiledevice3, objection"
+if ($LASTEXITCODE -ne 0) {
+    throw "The portable Python packages could not be imported."
+}
+
 New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
-Copy-Item -Path (Join-Path $pythonBuildDir "*") -Destination $pythonDir -Recurse -Force
+robocopy $pythonBuildDir $pythonDir /MIR /NFL /NDL /NJH /NJS /R:2 /W:1 | Out-Null
+if ($LASTEXITCODE -ge 8) {
+    throw "Could not copy portable Python to the USB drive (robocopy exit code $LASTEXITCODE)."
+}
 
 Remove-Item $downloadsDir -Recurse -Force -ErrorAction SilentlyContinue
 
