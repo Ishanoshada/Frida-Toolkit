@@ -1,13 +1,15 @@
 <#
 .SYNOPSIS
-    Installs the full Android + iOS + AI dev environment used by Frida-Toolkit:
-    CMake, Ninja, Android NDK/platform-tools/Android Studio, jadx, objection,
-    OEM USB/ADB drivers, scrcpy, Apple device support, pymobiledevice3, Frida,
-    an iOS SSH-over-USB tunnel helper, Windows Terminal, PowerShell 7, Oh My
-    Posh + a Nerd Font, VS Code with a curated extension set, and free AI
-    tooling (GitHub Copilot CLI + a local/offline Ollama model sized to your
-    actual RAM), plus performance tweaks for laptops with no dedicated GPU
-    such as the ASUS Vivobook 15 F1504ZA-WH52.
+    Installs the full Android + iOS + AI + Linux dev environment used by
+    Frida-Toolkit: CMake, Ninja, Android NDK/platform-tools/Android Studio,
+    jadx, objection, OEM USB/ADB drivers, scrcpy, Apple device support,
+    pymobiledevice3, Frida, an iOS SSH-over-USB tunnel helper, Windows
+    Terminal, PowerShell 7, Oh My Posh + a Nerd Font, VS Code with a curated
+    extension set, free AI tooling (GitHub Copilot CLI + a local/offline
+    Ollama model sized to your actual RAM), and a WSL2 + Ubuntu Linux
+    toolchain, plus performance tweaks for laptops with no dedicated GPU
+    such as the ASUS Vivobook 15 F1504ZA-WH52. See also
+    tools\Create-PortableUSB.ps1 for a fully self-contained portable kit.
 
 .DESCRIPTION
     Safe to re-run: each step checks whether the tool is already installed
@@ -271,7 +273,42 @@ if (Test-Command "ollama") {
 }
 
 # ---------------------------------------------------------------------------
-# 9. Laptop performance tweaks (low-GPU, modest-RAM laptops)
+# 9. WSL2 + Ubuntu Linux toolchain (native Linux dev environment alongside Windows)
+#    `wsl --install` enables the needed Windows features, installs the WSL2
+#    kernel, and installs Ubuntu in one shot on Windows 11, but the very
+#    first install requires a reboot before the distro can initialize.
+#    Re-run this script after that reboot to finish the Linux-side bootstrap.
+# ---------------------------------------------------------------------------
+Write-Step "WSL2 + Ubuntu Linux toolchain"
+$wslInstalled = $false
+try {
+    $wslStatus = wsl --status 2>$null
+    if ($LASTEXITCODE -eq 0) { $wslInstalled = $true }
+} catch { $wslInstalled = $false }
+
+$ubuntuPresent = $false
+if ($wslInstalled) {
+    $distros = wsl -l -q 2>$null
+    if ($distros -match "Ubuntu") { $ubuntuPresent = $true }
+}
+
+if (-not $ubuntuPresent) {
+    Write-Host "Installing WSL2 + Ubuntu (requires a reboot the first time)..."
+    wsl --install -d Ubuntu --no-launch 2>$null
+    Write-Host "WSL2/Ubuntu install kicked off. Reboot, then re-run this script to finish the Linux toolchain bootstrap." -ForegroundColor Yellow
+} else {
+    Write-Host "WSL2 + Ubuntu already installed; bootstrapping the Linux-side toolchain..."
+    wsl --set-version Ubuntu 2 2>$null
+    # Bootstrap as root so this works even before the distro's first-run
+    # interactive username/password setup (OOBE) has been completed.
+    $linuxBootstrap = "apt-get update && apt-get install -y build-essential cmake ninja-build python3 python3-pip python3-venv git android-tools-adb android-tools-fastboot && pip3 install --break-system-packages --upgrade frida-tools frida"
+    wsl -d Ubuntu -u root -- bash -c $linuxBootstrap
+    Write-Host "Linux toolchain ready inside WSL Ubuntu (build-essential, cmake, ninja, adb/fastboot, frida)." -ForegroundColor Green
+    Write-Host "First time only: run 'wsl -d Ubuntu' once to finish creating your normal (non-root) Linux user account." -ForegroundColor Cyan
+}
+
+# ---------------------------------------------------------------------------
+# 10. Laptop performance tweaks (low-GPU, modest-RAM laptops)
 # ---------------------------------------------------------------------------
 Write-Step "Performance tweaks for low-spec laptop hardware"
 try {
@@ -292,7 +329,7 @@ try {
 }
 
 # ---------------------------------------------------------------------------
-# 10. Verification
+# 11. Verification
 # ---------------------------------------------------------------------------
 Write-Step "Verification"
 Write-Host "cmake:" (cmake --version 2>$null | Select-Object -First 1)
@@ -308,6 +345,7 @@ Write-Host "pwsh (PowerShell 7):" (pwsh -Command '$PSVersionTable.PSVersion' 2>$
 Write-Host "code (VS Code):" (code --version 2>$null | Select-Object -First 1)
 Write-Host "gh copilot:" (gh copilot --version 2>$null)
 Write-Host "ollama:" (ollama --version 2>$null)
+Write-Host "WSL Ubuntu:" (wsl -d Ubuntu -- lsb_release -d 2>$null)
 
 Write-Step "Setup complete. Reboot/restart your shell so PATH and driver changes take effect."
 Write-Host "Try the free AI tools:" -ForegroundColor Cyan
