@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_scale_bus_bandwidth.
 *
@@ -32,4 +32,4 @@ log("QSEECom_scale_bus_bandwidth()");
 */
 onLeave: function (log, retval, state) {
 }
-}
+});

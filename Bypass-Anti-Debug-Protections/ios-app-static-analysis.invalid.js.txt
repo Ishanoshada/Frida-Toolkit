@@ -137,7 +137,8 @@ console.log("")
 console.warn("-----------------------------------")
 console.warn("|Protected Resources / Permissions|")
 console.warn("-----------------------------------")
-console.warn("Source: https:var dictKeys = ObjC.classes.NSBundle.mainBundle().infoDictionary().allKeys();
+console.warn("Source: unavailable");
+var dictKeys = ObjC.classes.NSBundle.mainBundle().infoDictionary().allKeys();
 var permissionListArray = [ "NSBluetoothAlwaysUsageDescription", "NSBluetoothPeripheralUsageDescription", "NSCalendarsUsageDescription", "NSRemindersUsageDescription", "NSCameraUsageDescription", "NSMicrophoneUsageDescription", "NSContactsUsageDescription", "NSFaceIDUsageDescription", "NSDesktopFolderUsageDescription", "NSDocumentsFolderUsageDescription", "NSDownloadsFolderUsageDescription", "NSNetworkVolumesUsageDescription", "NSRemovableVolumesUsageDescription", "NSFileProviderPresenceUsageDescription", "NSFileProviderDomainUsageDescription", "NSHealthClinicalHealthRecordsShareUsageDescription", "NSHealthShareUsageDescription", "NSHealthUpdateUsageDescription", "NSHealthRequiredReadAuthorizationTypeIdentifiers", "NSHomeKitUsageDescription", "NSLocationAlwaysAndWhenInUseUsageDescription", "NSLocationUsageDescription", "NSLocationWhenInUseUsageDescription", "NSLocationAlwaysUsageDescription", "NSAppleMusicUsageDescription", "NSMotionUsageDescription", "NFCReaderUsageDescription", "NSPhotoLibraryAddUsageDescription", "NSPhotoLibraryUsageDescription", "NSAppleScriptEnabled", "NSAppleEventsUsageDescription", "NSSystemAdministrationUsageDescription", "ITSAppUsesNonExemptEncryption", "ITSEncryptionExportComplianceCode", "NSSiriUsageDescription", "NSSpeechRecognitionUsageDescription", "NSVideoSubscriberAccountUsageDescription", "UIRequiresPersistentWiFi" ]
 var permissionListNameDict = {
 "NSBluetoothAlwaysUsageDescription":"Privacy - Bluetooth Always Usage Description", 

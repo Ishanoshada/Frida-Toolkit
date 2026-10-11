@@ -17,7 +17,7 @@ Many apps use native libraries for performance and security. These scripts enabl
 ## Scripts Included (12 total)
 - `android-arm64-strace.js` - ARM64 system call tracing
 - `android-native-interceptor.js` - Generic native function interception
-- `jnitrace.js` - JNI function call tracing
+- `jnitrace.invalid.js.txt` - Preserved invalid legacy source; not runnable
 - And 9 additional native hooking utilities
 
 ## Usage Examples
@@ -29,10 +29,8 @@ frida -U -f com.example.app -l android-native-interceptor.js --no-pause
 ```
 
 ### JNI Tracing
-```bash
-# Trace JNI calls between Java and Native
-frida -U -f com.example.app -l jnitrace.js --no-pause
-```
+The bundled `jnitrace` source is preserved as text because it does not parse as
+valid JavaScript; it is not a runnable Frida script.
 
 ### ARM64 System Call Tracing
 ```bash
@@ -40,11 +38,10 @@ frida -U -f com.example.app -l jnitrace.js --no-pause
 frida -U -f com.example.app -l android-arm64-strace.js --no-pause
 ```
 
-### Combined Analysis
+### Combined Native Analysis
 ```bash
-# Native and JNI monitoring
+# Native monitoring
 frida -U -f com.example.app \
-  -l jnitrace.js \
   -l android-native-interceptor.js \
   --no-pause
 ```

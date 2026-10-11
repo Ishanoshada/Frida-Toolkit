@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_create_key.
 *
@@ -32,4 +32,4 @@ log("QSEECom_create_key()");
 */
 onLeave: function (log, retval, state) {
 }
-}
+});

@@ -22,11 +22,11 @@ Many applications implement detection mechanisms to prevent debuggers from attac
 - `debug-webview.js` - WebView debug interface
 - `dynamichooks.js` - Dynamic hook loading
 - `everything.js` - Comprehensive bypass script
-- `ios-app-static-analysis.js` - iOS static analysis hooks
+- `ios-app-static-analysis.invalid.js.txt` - Preserved invalid legacy source; not runnable
 - `ios-backtrace-http-req.js` - iOS HTTP request backtraces
 - `ios-hook-classes-methods.js` - iOS class/method hooking
 - `ios-sqlite3.js` - iOS SQLite3 operations
-- `ipa-dynamic-check.js` - IPA dynamic checking bypass
+- `ipa-dynamic-check.invalid.js.txt` - Preserved invalid legacy source; not runnable
 - `jailmonkey-bypass.js` - JailMonkey detection bypass
 - `logall.js` - Comprehensive logging mechanism
 - `native-request-module-offset-finder.js` - Native module offset discovery
@@ -50,10 +50,8 @@ frida -U -f com.example.app -l everything.js --no-pause
 ```
 
 ### iOS-Specific
-```bash
-# iOS anti-debug bypass
-frida -U -f com.example.app -l ios-app-static-analysis.js --no-pause
-```
+The legacy iOS samples above are preserved as text because they do not parse as valid
+JavaScript; do not pass them to Frida.
 
 ### Multiple Protections
 ```bash

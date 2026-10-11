@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_send_modified_resp_64.
 *
@@ -32,4 +32,4 @@ log("QSEECom_send_modified_resp_64()");
 */
 onLeave: function (log, retval, state) {
 }
-}
+});

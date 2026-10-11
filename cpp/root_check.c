@@ -27,7 +27,7 @@ static int path_exists_syscall(const char *path) {
 
 static bool check_su_binary(void) {
     /* Only check world-readable system paths — avoids SELinux EACCES false
-     * positives on /data/* paths where SELinux denies lookup unconditionally */
+     * positives on data paths where SELinux denies lookup unconditionally. */
     const char *paths[] = {
         "/system/bin/su", "/system/xbin/su",
         "/system/sd/xbin/su", "/system/bin/failsafe/su", NULL

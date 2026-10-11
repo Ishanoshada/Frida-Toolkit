@@ -117,7 +117,8 @@ console.log("")
 console.warn("-----------------------------------")
 console.warn("|ATS (App Transport Security) è®¾ç½®|")
 console.warn("-----------------------------------")
-console.warn("å‚è€ƒèµ„æ–™: https:    var dictKeys = ObjC.classes.NSBundle.mainBundle().infoDictionary().allKeys();
+console.warn("Reference: unavailable");
+var dictKeys = ObjC.classes.NSBundle.mainBundle().infoDictionary().allKeys();
 if (dictKeys.containsObject_("NSAppTransportSecurity")) {
 var atsDictKeys = ObjC.classes.NSBundle.mainBundle().infoDictionary().objectForKey_("NSAppTransportSecurity").allKeys();
 for (var i = 0; i < atsDictKeys.count(); i++) {

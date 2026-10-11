@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_update_key_user_info.
 *
@@ -32,4 +32,4 @@ log("QSEECom_update_key_user_info()");
 */
 onLeave: function (log, retval, state) {
 }
-}
+});

@@ -144,6 +144,28 @@ Each `.c` / `.cpp` file in this directory has a matching `bypass_*.js` script th
 
 ## Quick Start
 
+### Build the native Android libraries
+
+The CMake project builds `libsna.so`, `libsnb.so`, `libsnitchtt.so`, and
+`libdevice_trust_native.so` for the selected Android ABI. Install the Android
+NDK, CMake, and Ninja (the Android SDK's CMake package includes Ninja), then
+set `ANDROID_NDK_HOME` to the installed NDK directory. For example, from the
+repository root in PowerShell:
+
+```powershell
+$env:ANDROID_NDK_HOME = "C:\Users\you\AppData\Local\Android\Sdk\ndk\<version>"
+cmake -S .\cpp -B .\cpp\build -G Ninja `
+  -DCMAKE_TOOLCHAIN_FILE="$env:ANDROID_NDK_HOME\build\cmake\android.toolchain.cmake" `
+  -DANDROID_ABI=arm64-v8a `
+  -DANDROID_PLATFORM=android-23
+cmake --build .\cpp\build --config Release
+```
+
+Choose another `ANDROID_ABI` (for example, `armeabi-v7a` or `x86_64`) and a
+separate build directory to produce libraries for another architecture. The
+three `sna`, `snb`, and `snitchtt` libraries form the detection/JNI set;
+`device_trust_native` is the separate C++ JNI example.
+
 ### 1. Pick the bypass script you need
 
 If you're targeting **all detections** at once (the realistic case for a Device Trust library), use the master script:

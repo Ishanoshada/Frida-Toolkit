@@ -3,7 +3,7 @@
 * This stub is currently auto-generated from manpages when available.
 *
 * For full API reference, see: http: */
-{
+({
 /**
 * Called synchronously when about to call QSEECom_app_load_query.
 *
@@ -36,4 +36,4 @@ console.log("[LOAD_TA][BEFORE] QSEECom_app_load_query ( "+appname+" ) > "+handle
 */
 onLeave: function (log, retval, state) {
 }
-}
+});
