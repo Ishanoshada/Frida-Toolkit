@@ -22,8 +22,8 @@
     Defaults to <script drive>\Drivers\IntelVMD if present.
 
 .PARAMETER KeyBackupPath
-    Where BitLocker recovery key text files are written. Default: the folder
-    this script lives in. Treat these files as secrets.
+    Where BitLocker recovery key text files are written. Default: your
+    Documents folder (not removable media). Treat these files as secrets.
 
 .PARAMETER DecryptBitLocker
     Starts decryption of the system drive if encryption is on.
@@ -31,7 +31,7 @@
 [CmdletBinding()]
 param(
     [string]$VmdDriverPath,
-    [string]$KeyBackupPath = $PSScriptRoot,
+    [string]$KeyBackupPath = [Environment]::GetFolderPath('MyDocuments'),
     [switch]$DecryptBitLocker
 )
 
@@ -110,6 +110,14 @@ cscript //nologo "$env:SystemRoot\System32\slmgr.vbs" /xpr
 Write-Host "A Lenovo OEM license can fail on different hardware; sign in with your Microsoft account to re-activate." -ForegroundColor Yellow
 
 Write-Step "Checklist"
+$finalStatus = (manage-bde -status $drive) -join "`n"
+$safeToMove = ($finalStatus -match 'Fully Decrypted') -and ($finalStatus -notmatch 'Decryption in Progress')
+if ($safeToMove) {
+    Write-Host "SAFE TO MOVE: $drive is fully decrypted." -ForegroundColor Green
+} else {
+    Write-Host "NOT SAFE TO MOVE YET: $drive is not fully decrypted. Re-run until it shows Fully Decrypted." -ForegroundColor Red
+}
+Write-Host "Note: confirm the SSD's length (2280) on its label; software cannot detect it."
 Write-Host "1. Back up important files off this drive first."
 Write-Host "2. Shut down fully, unplug power, hold power button 10s."
 Write-Host "3. On the ASUS: unplug AC, disconnect/disable battery per the service guide, use an ESD strap."

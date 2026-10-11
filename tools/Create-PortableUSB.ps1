@@ -36,6 +36,8 @@ param(
 
     [string]$PythonVersion = "3.12.7",
 
+    [switch]$SkipWheelhouse,
+
     # Every line printed is also appended here, so the full run can be
     # reviewed/shared even if the terminal window's scrollback gets lost.
     [string]$LogPath = (Join-Path $env:TEMP "frida-toolkit-portable-usb-$(Get-Date -Format 'yyyyMMdd-HHmmss').log")
@@ -59,6 +61,11 @@ if (-not (Test-Path $UsbDrive)) {
     Write-Host "Drive '$UsbDrive' not found. Pass the drive root, e.g. -UsbDrive 'E:\'" -ForegroundColor Red
     try { Stop-Transcript | Out-Null } catch { }
     exit 1
+}
+
+$fsName = (Get-Volume -DriveLetter $UsbDrive.Substring(0, 1) -ErrorAction SilentlyContinue).FileSystem
+if ($fsName -eq 'FAT32') {
+    Write-Host "Warning: $UsbDrive is FAT32 (4GB per-file limit, no large ISOs). Reformat as exFAT for best results: Format-Volume -DriveLetter $($UsbDrive.Substring(0,1)) -FileSystem exFAT" -ForegroundColor Yellow
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
@@ -184,6 +191,22 @@ if ($LASTEXITCODE -ne 0) {
     throw "The portable Python packages could not be imported."
 }
 
+# Reproducibility: record exact package versions and keep an offline wheel cache
+# so the kit can be rebuilt later without internet or surprise upgrades.
+& $buildPythonExe -m pip freeze --all | Set-Content -Path (Join-Path $portableRoot "requirements.lock.txt") -Encoding ASCII
+if (-not $SkipWheelhouse) {
+    $wheelhouse = Join-Path $toolsRoot "wheelhouse"
+    New-Item -ItemType Directory -Path $wheelhouse -Force | Out-Null
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    & $buildPythonExe -m pip download --dest $wheelhouse -r (Join-Path $portableRoot "requirements.lock.txt") 2>&1 | Out-Null
+    $dlExit = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
+    if ($dlExit -ne 0) {
+        Write-Host "Could not build the offline wheel cache (non-fatal)." -ForegroundColor Yellow
+    }
+}
+
 New-Item -ItemType Directory -Path $pythonDir -Force | Out-Null
 robocopy $pythonBuildDir $pythonDir /MIR /NFL /NDL /NJH /NJS /R:2 /W:1 | Out-Null
 if ($LASTEXITCODE -ge 8) {
@@ -227,11 +250,14 @@ $shims = @{
     "frida-ps"        = "frida_tools.ps"
     "frida-trace"     = "frida_tools.tracer"
     "frida-ls-devices" = "frida_tools.lsd"
-    "objection"       = "objection"
+    "objection"       = "objection.console.cli"
     "pymobiledevice3" = "pymobiledevice3"
 }
 foreach ($name in $shims.Keys) {
     $shimBody = "@echo off`r`n`"%~dp0..\python\python.exe`" -m $($shims[$name]) %*`r`n"
+    if ($name -eq "objection") {
+        $shimBody = "@echo off`r`n`"%~dp0..\python\python.exe`" -c `"import sys;from objection.console.cli import cli;sys.exit(cli())`" %*`r`n"
+    }
     Set-Content -Path (Join-Path $shimDir "$name.cmd") -Value $shimBody -Encoding ASCII
 }
 
