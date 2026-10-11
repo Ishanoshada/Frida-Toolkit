@@ -379,9 +379,9 @@ drivers + scrcpy, Apple device support + pymobiledevice3, Frida, an iOS
 SSH-over-USB tunnel helper for jailbroken devices
 (`tools/ios-ssh-tunnel.ps1`), Windows Terminal + PowerShell 7 + Oh My Posh,
 VS Code with a curated extension set, free AI tooling (GitHub Copilot CLI +
-a local/offline Ollama model auto-sized to your RAM), a WSL2 + Ubuntu Linux
-toolchain, and laptop performance tweaks. It's safe to re-run — each step
-checks whether a tool is already installed first.
+a local/offline Ollama model auto-sized to your RAM), WSL2 + Ubuntu/Fedora
+KDE Linux toolchains, and laptop performance tweaks. It's safe to re-run —
+each step checks whether a tool is already installed first.
 
 ```powershell
 # Clone with git instead of downloading individual files - avoids

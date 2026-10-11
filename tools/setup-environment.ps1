@@ -279,39 +279,62 @@ if (Test-Command "ollama") {
 }
 
 # ---------------------------------------------------------------------------
-# 9. WSL2 + Ubuntu Linux toolchain (native Linux dev environment alongside Windows)
+# 9. WSL2 + Ubuntu/Fedora Linux toolchains (native Linux dev environments alongside Windows)
 #    `wsl --install` enables the needed Windows features, installs the WSL2
-#    kernel, and installs Ubuntu in one shot on Windows 11, but the very
-#    first install requires a reboot before the distro can initialize.
-#    Re-run this script after that reboot to finish the Linux-side bootstrap.
+#    kernel, and installs a distro in one shot on Windows 11, but the first
+#    install requires a reboot before the distro can initialize. Re-run this
+#    script after that reboot to finish the Linux-side bootstrap.
 # ---------------------------------------------------------------------------
-Write-Step "WSL2 + Ubuntu Linux toolchain"
+Write-Step "WSL2 + Ubuntu/Fedora KDE Linux toolchains"
 $wslInstalled = $false
 try {
     $wslStatus = wsl --status 2>$null
     if ($LASTEXITCODE -eq 0) { $wslInstalled = $true }
 } catch { $wslInstalled = $false }
 
-$ubuntuPresent = $false
+$installedDistros = @()
 if ($wslInstalled) {
-    $distros = wsl -l -q 2>$null
-    if ($distros -match "Ubuntu") { $ubuntuPresent = $true }
+    $installedDistros = @((wsl -l -q 2>$null) | Where-Object { $_ -and $_.Trim() })
 }
 
-if (-not $ubuntuPresent) {
-    Write-Host "Installing WSL2 + Ubuntu (requires a reboot the first time)..."
-    wsl --install -d Ubuntu --no-launch 2>$null
-    Write-Host "WSL2/Ubuntu install kicked off. Reboot, then re-run this script to finish the Linux toolchain bootstrap." -ForegroundColor Yellow
-} else {
-    Write-Host "WSL2 + Ubuntu already installed; bootstrapping the Linux-side toolchain..."
-    wsl --set-version Ubuntu 2 2>$null
-    # Bootstrap as root so this works even before the distro's first-run
-    # interactive username/password setup (OOBE) has been completed.
-    $linuxBootstrap = "apt-get update && apt-get install -y build-essential cmake ninja-build python3 python3-pip python3-venv git android-tools-adb android-tools-fastboot && pip3 install --break-system-packages --upgrade frida-tools frida"
-    wsl -d Ubuntu -u root -- bash -c $linuxBootstrap
-    Write-Host "Linux toolchain ready inside WSL Ubuntu (build-essential, cmake, ninja, adb/fastboot, frida)." -ForegroundColor Green
-    Write-Host "First time only: run 'wsl -d Ubuntu' once to finish creating your normal (non-root) Linux user account." -ForegroundColor Cyan
+$linuxTargets = @(
+    @{
+        Name = "Ubuntu"
+        InstallCommand = "wsl --install -d Ubuntu --no-launch"
+        Bootstrap = "apt-get update && apt-get install -y build-essential cmake ninja-build python3 python3-pip python3-venv git android-tools-adb android-tools-fastboot && pip3 install --break-system-packages --upgrade frida-tools frida"
+        PostInstall = "First time only: run 'wsl -d Ubuntu' once to finish creating your normal (non-root) Linux user account."
+    },
+    @{
+        Name = "Fedora"
+        InstallCommand = "wsl --install -d Fedora --no-launch"
+        Bootstrap = "dnf -y update && dnf -y groupinstall 'KDE Plasma Workspaces' && dnf -y install @development-tools cmake ninja-build python3 python3-pip git android-tools adb fastboot && pip3 install --break-system-packages --upgrade frida-tools frida"
+        PostInstall = "First time only: run 'wsl -d Fedora' once to finish creating your normal (non-root) Linux user account; if you want a full native Fedora KDE desktop, use a VM or dual-boot instead of WSL."
+    }
+)
+
+foreach ($target in $linuxTargets) {
+    if ($installedDistros -contains $target.Name) {
+        Write-Host "WSL2 + $($target.Name) already installed; bootstrapping the Linux-side toolchain..."
+        wsl --set-version $target.Name 2 2>$null
+        try {
+            wsl -d $target.Name -u root -- bash -c $target.Bootstrap
+            Write-Host "Linux toolchain ready inside WSL $($target.Name) (build-essential/cmake/ninja, adb/fastboot, frida)." -ForegroundColor Green
+            Write-Host $target.PostInstall -ForegroundColor Cyan
+        } catch {
+            Write-Host "Could not fully bootstrap WSL $($target.Name); re-run this script after the distro is fully initialized." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "Installing WSL2 + $($target.Name) (requires a reboot the first time)..."
+        try {
+            Invoke-Expression $target.InstallCommand 2>$null
+            Write-Host "WSL2/$($target.Name) install kicked off. Reboot, then re-run this script to finish the Linux toolchain bootstrap." -ForegroundColor Yellow
+        } catch {
+            Write-Host "WSL $($target.Name) install command was not available on this host; skipping that distro." -ForegroundColor Yellow
+        }
+    }
 }
+
+Write-Host "WSL summary: Ubuntu and Fedora are both supported; install each distro once and re-run this script to bootstrap the Linux tools." -ForegroundColor Cyan
 
 # ---------------------------------------------------------------------------
 # 10. Laptop performance tweaks (low-GPU, modest-RAM laptops)
@@ -352,6 +375,7 @@ Write-Host "code (VS Code):" (code --version 2>$null | Select-Object -First 1)
 Write-Host "gh copilot:" (gh copilot --version 2>$null)
 Write-Host "ollama:" (ollama --version 2>$null)
 Write-Host "WSL Ubuntu:" (wsl -d Ubuntu -- lsb_release -d 2>$null)
+Write-Host "WSL Fedora:" (wsl -d Fedora -- cat /etc/os-release 2>$null | Select-Object -First 1)
 
 Write-Step "Setup complete. Reboot/restart your shell so PATH and driver changes take effect."
 Write-Host "Try the free AI tools:" -ForegroundColor Cyan
