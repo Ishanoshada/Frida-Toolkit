@@ -370,6 +370,44 @@ cd Bypass-SSL-Certificate-Pinning/
 ls -la
 ```
 
+### Windows: One-Click Full Dev Environment
+
+For Windows 11, `tools/setup-environment.ps1` installs a complete, idempotent
+Android + iOS + AI + Linux research environment in one run: CMake/Ninja,
+Android NDK/platform-tools/Android Studio/jadx/objection, OEM USB-ADB
+drivers + scrcpy, Apple device support + pymobiledevice3, Frida, an iOS
+SSH-over-USB tunnel helper for jailbroken devices
+(`tools/ios-ssh-tunnel.ps1`), Windows Terminal + PowerShell 7 + Oh My Posh,
+VS Code with a curated extension set, free AI tooling (GitHub Copilot CLI +
+a local/offline Ollama model auto-sized to your RAM), a WSL2 + Ubuntu Linux
+toolchain, and laptop performance tweaks. It's safe to re-run — each step
+checks whether a tool is already installed first.
+
+```powershell
+# Clone with git instead of downloading individual files - avoids
+# copy/paste corruption in terminals that reorder long pasted text.
+git clone https://github.com/ishanoshada/Frida-Toolkit.git
+cd Frida-Toolkit
+
+# Run from an elevated (Run as Administrator) PowerShell prompt:
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\setup-environment.ps1
+```
+
+Every run writes a full transcript log (path printed at the end) so the
+complete output can be reviewed or shared even if your terminal's visible
+scrollback is lost or overwritten.
+
+Want a fully self-contained, no-install kit on a USB drive instead (bundles
+a portable Python + frida/pymobiledevice3/objection, platform-tools,
+scrcpy, jadx, and PowerShell 7)? Run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\Create-PortableUSB.ps1 -UsbDrive "D:\"
+```
+
+(Use whichever drive letter your USB stick is actually assigned — check with
+`Get-Volume | Where-Object DriveType -eq 'Removable'` if unsure.)
+
 ---
 
 ## 🛠️ Usage Guide

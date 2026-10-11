@@ -23,10 +23,16 @@ param(
     # RAM threshold (GB) above which a bigger/better local AI model is pulled
     # instead of the small default. Auto-detected RAM is compared against this;
     # override with -MinRamForBigModelGB if you want a different cutoff.
-    [int]$MinRamForBigModelGB = 16
+    [int]$MinRamForBigModelGB = 16,
+
+    # Every line printed is also appended here, so the full run can be
+    # reviewed/shared even if the terminal window's scrollback gets lost
+    # or overwritten by later commands.
+    [string]$LogPath = (Join-Path $env:TEMP "frida-toolkit-setup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log")
 )
 
 $ErrorActionPreference = 'Continue'
+try { Start-Transcript -Path $LogPath -Append | Out-Null } catch { }
 
 function Write-Step($text) {
     Write-Host ""
@@ -353,3 +359,9 @@ Write-Host "  gh copilot suggest `"list files recursively`"" -ForegroundColor Cy
 Write-Host "  ollama run llama3.2:3b   (or the bigger model this script picked, if any)" -ForegroundColor Cyan
 Write-Host "Connect to a jailbroken iOS device over SSH:" -ForegroundColor Cyan
 Write-Host "  tools\ios-ssh-tunnel.ps1" -ForegroundColor Cyan
+
+Write-Host ""
+Write-Host "Full log saved to: $LogPath" -ForegroundColor Cyan
+Write-Host "(Share this file if you need help troubleshooting - it has the complete output, even if your terminal scrollback gets overwritten.)" -ForegroundColor Cyan
+
+try { Stop-Transcript | Out-Null } catch { }

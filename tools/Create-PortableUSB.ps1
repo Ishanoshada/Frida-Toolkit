@@ -34,18 +34,29 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$UsbDrive,
 
-    [string]$PythonVersion = "3.12.7"
+    [string]$PythonVersion = "3.12.7",
+
+    # Every line printed is also appended here, so the full run can be
+    # reviewed/shared even if the terminal window's scrollback gets lost.
+    [string]$LogPath = (Join-Path $env:TEMP "frida-toolkit-portable-usb-$(Get-Date -Format 'yyyyMMdd-HHmmss').log")
 )
 
 $ErrorActionPreference = 'Stop'
+try { Start-Transcript -Path $LogPath -Append | Out-Null } catch { }
 
 function Write-Step($text) {
     Write-Host ""
     Write-Host "==> $text" -ForegroundColor Cyan
 }
 
+# Normalize so "D:", "D:\", and "D:/" all work identically - a bare drive
+# letter with no backslash is a common, confusing source of "not found"
+# errors since it resolves relative to that drive's current directory.
+if ($UsbDrive -match '^[A-Za-z]:$') { $UsbDrive = "$UsbDrive\" }
+
 if (-not (Test-Path $UsbDrive)) {
     Write-Host "Drive '$UsbDrive' not found. Pass the drive root, e.g. -UsbDrive 'E:\'" -ForegroundColor Red
+    try { Stop-Transcript | Out-Null } catch { }
     exit 1
 }
 
@@ -225,3 +236,6 @@ Write-Host "Portable kit built at: $portableRoot" -ForegroundColor Green
 Write-Host "On any Windows machine: double-click Frida-Toolkit-Portable.bat to get a ready shell." -ForegroundColor Cyan
 Write-Host "Note: a new host machine may still need OEM USB/ADB drivers installed once to recognize a device (see tools\setup-environment.ps1)." -ForegroundColor Yellow
 Write-Host "Note: jadx needs a Java runtime (JRE 11+) present on the host machine." -ForegroundColor Yellow
+Write-Host "Full log saved to: $LogPath" -ForegroundColor Cyan
+
+try { Stop-Transcript | Out-Null } catch { }
